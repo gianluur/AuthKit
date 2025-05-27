@@ -18,7 +18,6 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Toggle } from "@/components/ui/toggle";
 import { LuEye } from "react-icons/lu";
 import { LuEyeOff } from "react-icons/lu";
 
@@ -72,16 +71,19 @@ export default function Signup() {
 
     startTransition(async () => {
       try {
-        const { error } = await authClient.signUp.email({
+        await authClient.signUp.email({
           ...validatedInput.data,
-        })
-
-        if (error){
-          setFormStatus({message: error.message ?? "Something went wrong", isError: true});
+        },
+        {
+          onSuccess: () => {
+            setFormStatus({message: "Verification email sent! Please check your inbox", isError: false});
+          },
+          
+          onError: (ctx) => {
+            setFormStatus({message: ctx.error.message ?? "Something went wrong", isError: true});
+          }
         }
-        else {
-          setFormStatus({message: "Verification email sent! Please check your inbox", isError: false});
-        }
+      )
       }
       catch (error){
         if (error instanceof APIError){
@@ -107,7 +109,7 @@ export default function Signup() {
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John" type="text" {...field}/>
+                    <Input placeholder="John" type="text" autoComplete="name" {...field}/>
                   </FormControl>
                   <FormMessage/>
                 </FormItem>
@@ -117,7 +119,7 @@ export default function Signup() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="john.doe@example.com" type="email" {...field}/>
+                    <Input placeholder="john.doe@example.com" type="email" autoComplete="email" {...field}/>
                   </FormControl>
                   <FormMessage/>
                 </FormItem>

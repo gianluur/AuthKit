@@ -20,7 +20,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox";
 
-import { LoginSchema } from "@/schemas";
+import { SignInSchema } from "@/schemas";
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -37,8 +37,8 @@ export default function Login() {
   const [isPending, startTransition] = useTransition();
   const [formStatus, setFormStatus] = useState({message: "", isError: false});
 
-  const form = useForm<z.infer<typeof LoginSchema>>({
-    resolver: zodResolver(LoginSchema),
+  const form = useForm<z.infer<typeof SignInSchema>>({
+    resolver: zodResolver(SignInSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -58,22 +58,24 @@ export default function Login() {
 
     startTransition(async () => {
       try {
-        const { error } = await authClient.signIn.email({
+        await authClient.signIn.email({
           ...validatedInput.data,
           callbackURL: "/profile"
-        },
+        }, 
         {
+          onSuccess: () => {
+            setFormStatus({ message: "Logged in successfully! Redirecting...", isError: false });
+          },
+          
           onError: (ctx) => {
             if (ctx.error.status === 403){
               setFormStatus({message: "Please verify your email address before logging in", isError: true});
             }
-            console.error("During login there was an API Error: ", ctx.error.message, ctx.error.status);
+            else {
+              setFormStatus({message: ctx.error.message ?? "Something went wrong", isError: true});
+            }
           }
         })
-
-        if (error){
-          setFormStatus({message: error.message ?? "Something went wrong", isError: true});
-        }
       }
       catch (error){
         if (error instanceof APIError){
@@ -99,7 +101,7 @@ export default function Login() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="john.doe@example.com" type="email" {...field}/>
+                    <Input placeholder="john.doe@example.com" type="email" autoComplete="email" {...field}/>
                   </FormControl>
                   <FormMessage/>
                 </FormItem>
@@ -109,24 +111,30 @@ export default function Login() {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input placeholder="*****" type="text" {...field}/>
+                      <Input placeholder="•••••••••" type="password" {...field} />
                   </FormControl>
                   <FormMessage/>
                 </FormItem>
               )}/>
+              
+              <div className="flex items-center justify-between">
+                <FormField control={form.control} name="rememberMe" render={({ field }) => (
+                    <FormItem className="flex items-center gap-2">
+                      <FormControl>
+                        <Checkbox checked={field.value} onCheckedChange={field.onChange} name="remember-me" id="remember-me"/>
+                      </FormControl>
+                      <FormLabel htmlFor="remember-me" className="text-sm font-normal">
+                        Remember me
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
 
-              <FormField control={form.control} name="rememberMe" render={({ field }) => (
-                  <FormItem className="flex items-center gap-2 space-y-0">
-                    <FormControl>
-                      <Checkbox checked={field.value} onCheckedChange={field.onChange} id="remember-me"/>
-                    </FormControl>
-                    <FormLabel htmlFor="remember-me" className="text-sm font-normal">
-                      Remember me
-                    </FormLabel>
-                  </FormItem>
-                )}
-              />
-
+                <Link href="/forgot-password">
+                  <p className="text-sm text-blue-400 font-medium">Forgot password?</p>
+                </Link>
+              </div>
+            
               <FormStatus message={formStatus.message} isError={formStatus.isError} />
               
               <Button type="submit" className="w-full" disabled={isPending || !formState.isValid}>
@@ -138,7 +146,7 @@ export default function Login() {
           <CardFooter className="flex flex-col items-center justify-center">
             <div className="w-full flex items-center gap-4">
               <hr className="flex-grow border-t border-gray-300" />
-              <span className="text-sm font-semibold">Or</span>
+              <span className="text-sm">Or sign-in with</span>
               <hr className="flex-grow border-t border-gray-300" />
             </div>
           <div className="flex flex-col gap-1 my-1">
