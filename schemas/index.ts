@@ -39,7 +39,7 @@ export const SignInSchema = z.object({
 });
 
 export const ChangePasswordSchema = z.object({
-  oldPassword: z.string().min(3),
+  currentPassword: z.string().min(3),
   newPassword: z.string().min(3),
 });
 

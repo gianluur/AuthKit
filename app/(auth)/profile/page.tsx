@@ -14,11 +14,11 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { authClient } from "@/lib/auth-client";
 import Image from "next/image";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 
 export default function Profile(){
   const session = authClient.useSession();  
   const user = session?.data?.user;
-  
 
   return(
     <main className="flex min-h-screen flex-col items-center justify-center">
@@ -37,16 +37,25 @@ export default function Profile(){
           </div>
           )}
         </CardContent>
-        <CardFooter>
-          <Button onClick={async () => {
-            await authClient.signOut({
-              fetchOptions: {
-                onSuccess: () => {
-                  redirect("/signin");
+        <CardFooter className="flex gap-2">
+          <Link href={"/change-password"}>
+            <Button>
+              Change Password
+            </Button>
+          </Link>
+
+          <Button 
+            variant="destructive"
+            onClick={async () => {
+              await authClient.signOut({
+                fetchOptions: {
+                  onSuccess: () => {
+                    redirect("/signin");
+                  }
                 }
-              }
-            });
-          }}>
+              });
+            }}
+          >
             Sign Out
           </Button>
         </CardFooter>

@@ -33,29 +33,28 @@ import { Loader2 } from "lucide-react"; // Example loading icon
 import { getPasswordStrength } from "@/lib/utils";
 import { LuEye, LuEyeOff } from "react-icons/lu";
 import PasswordStrength from "@/components/password_strength";
+import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function ChangePassword(){
   const [isPending, startTransition] = useTransition();
-  const [passwordStrength, setPasswordStrength] = useState(0);
   const [formStatus, setFormStatus] = useState({message: "", isError: false});
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  const [isNewPasswordFocused, setIsNewPasswordFocused] = useState(false);
+
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof ChangePasswordSchema>>({
     resolver: zodResolver(ChangePasswordSchema),
     defaultValues: {
-      oldPassword: "",
+      currentPassword: "",
       newPassword: "",
     },
   });
 
   const { formState } = form;
-
   const watchedPassword = form.watch("newPassword");
-  // useEffect(() => {
-  //   setPasswordStrength(getPasswordStrength(watchedPassword));
-  // }, [watchedPassword])
 
   const onSubmit = (input: z.infer<typeof ChangePasswordSchema>) => {
     const validated = ChangePasswordSchema.safeParse(input);
@@ -64,7 +63,31 @@ export default function ChangePassword(){
       return;
     }
 
-
+    startTransition(async () => {
+      try {
+        await authClient.changePassword({
+          ...validated.data,
+          revokeOtherSessions: true
+        }, 
+        {
+          onSuccess: () => {
+            setFormStatus({ message: "Password changed successfully! Redirecting...", isError: false });
+            router.push("/profile")
+          },
+          onError: (ctx) => {
+            setFormStatus({message: ctx.error.message ?? "Something went wrong", isError: true});
+          }
+        });
+      }
+      catch (error) {
+        if (error instanceof APIError){
+          console.error("During signup there was an API Error: ", error.message, error.status);
+        }
+        else {
+          console.error("During signup there was an unexpected error: ", error);
+        }
+      }
+    })
   }
 
   return(
@@ -79,7 +102,7 @@ export default function ChangePassword(){
               <FormField
                 disabled={isPending}
                 control={form.control}
-                name="oldPassword"
+                name="currentPassword"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Old Password</FormLabel>
@@ -111,14 +134,15 @@ export default function ChangePassword(){
                         placeholder="•••••••••" 
                         type={showNewPassword ? "text" : "password"} 
                         {...field} 
-                        onFocus={() => {setIsPasswordFocused(true)}} 
-                        onBlur={() => {setIsPasswordFocused(false)}}
+                        onFocus={() => {setIsNewPasswordFocused(true)}} 
+                        onBlur={() => {setIsNewPasswordFocused(false)}}
                         onCopy={(e) => {if (!showNewPassword) e.preventDefault()}}
                       />
                       
                       <button 
                         type="button" 
                         onClick={() => {setShowNewPassword(prev => !prev)}} 
+                        onFocus={() => {setIsNewPasswordFocused(true)}}
                         aria-label="Toggle password visibility"
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground cursor-pointer h-9"
                       >
@@ -126,7 +150,7 @@ export default function ChangePassword(){
                       </button>
                     </div>
                   </FormControl>
-                  {isPasswordFocused && <PasswordStrength password={watchedPassword}/>}
+                  {isNewPasswordFocused && <PasswordStrength password={watchedPassword}/>}
                   <FormMessage/>
                 </FormItem>
               )}/>
