@@ -32,10 +32,13 @@ import { APIError }  from "better-auth/api";
 import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { SocialWrapper } from "@/components/socials_wrapper";
+import { Loader2 } from "lucide-react";
+import { LuEye, LuEyeOff } from "react-icons/lu";
 
 export default function Login() {
   const [isPending, startTransition] = useTransition();
   const [formStatus, setFormStatus] = useState({message: "", isError: false});
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<z.infer<typeof SignInSchema>>({
     resolver: zodResolver(SignInSchema),
@@ -49,8 +52,8 @@ export default function Login() {
 
   const { formState } = form;
 
-  const onSubmit = (input: z.infer<typeof LoginSchema>) => {
-    const validatedInput = LoginSchema.safeParse(input);
+  const onSubmit = (input: z.infer<typeof SignInSchema>) => {
+    const validatedInput = SignInSchema.safeParse(input);
     if (!validatedInput.success) {
       setFormStatus({message: validatedInput.error.message ?? "Something went wrong", isError: true});
       return;
@@ -101,21 +104,37 @@ export default function Login() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="john.doe@example.com" type="email" autoComplete="email" {...field}/>
+                    <Input placeholder="john.doe@example.com" type="email" autoComplete="email" autoFocus {...field}/>
                   </FormControl>
                   <FormMessage/>
                 </FormItem>
               )}/>
 
-              <FormField disabled={isPending}  control={form.control} name="password" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                      <Input placeholder="•••••••••" type="password" {...field} />
-                  </FormControl>
-                  <FormMessage/>
-                </FormItem>
-              )}/>
+              <FormField
+                disabled={isPending}
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                    <div className="relative">
+                      <Input placeholder="•••••••••" type={showPassword ? "text" : "password"} {...field}/>
+                      <button 
+                        type="button" 
+                        onMouseDown={(e) => e.preventDefault()} // Prevent focus loss
+                        onClick={() => {setShowPassword(prev => !prev)}} 
+                        aria-label="Toggle password confirmation visibility"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground cursor-pointer h-9"
+                      >
+                        {showPassword ? <LuEye/> : <LuEyeOff/>}
+                      </button>
+                    </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
               <div className="flex items-center justify-between">
                 <FormField control={form.control} name="rememberMe" render={({ field }) => (
@@ -137,8 +156,15 @@ export default function Login() {
             
               <FormStatus message={formStatus.message} isError={formStatus.isError} />
               
-              <Button type="submit" className="w-full" disabled={isPending || !formState.isValid}>
-                Submit
+              <Button type="submit" className="w-full " disabled={isPending || !formState.isValid}>
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit"
+                )}
               </Button>
             </form>
           </Form>

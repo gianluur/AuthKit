@@ -6,33 +6,58 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const getPasswordStrength = (password: string): number => {
-  let strength = 0;
+// lib/utils.ts (or wherever getPasswordStrength is located)
+
+export const getPasswordStrength = (password: string) => {
   const criterias = {
-    minLength: false,
-    hasUppercase: false,
-    hasLowercase: false,
-    hasNumber: false,
-    hasSymbol: false
+    minLength: {
+      label: "At least 8 characters",
+      fulfilled: false,
+    },
+    hasUppercase: {
+      label: "One uppercase letter",
+      fulfilled: false,
+    },
+    hasLowercase: {
+      label: "One lowercase letter",
+      fulfilled: false,
+    },
+    hasNumber: {
+      label: "One number",
+      fulfilled: false,
+    },
+    hasSymbol: {
+      label: "One symbol (!@#$%^&*()_+-=[]{};':\"\\|,.<>/?)",
+      fulfilled: false,
+    },
+  };
+
+  if (!password) {
+    return {
+      strength: 0,
+      criterias: Object.values(criterias),
+    };
   }
 
-  if (!password)
-    return 0;
+  criterias.minLength.fulfilled = password.length >= 8;
+  criterias.hasUppercase.fulfilled = /[A-Z]/.test(password);
+  criterias.hasLowercase.fulfilled = /[a-z]/.test(password);
+  criterias.hasNumber.fulfilled = /[0-9]/.test(password);
+  criterias.hasSymbol.fulfilled = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password);
 
-  criterias.minLength = password.length >= 8;
-  criterias.hasUppercase = /[A-Z]/.test(password);
-  criterias.hasLowercase = /[a-z]/.test(password);
-  criterias.hasNumber = /[0-9]/.test(password);
-  criterias.hasSymbol = /[!@#$%^&*()_+[\]{};':"\\|,.<>/?]/.test(password);
-
-  for (const criteria in criterias) {
-    if (criterias[criteria as keyof typeof criterias]) {
+  let strength = 0;
+  for (const key in criterias) {
+    if (criterias[key as keyof typeof criterias].fulfilled) {
       strength++;
     }
   }
 
-  if (strength === 5)
+  if (strength === 5) {
     strength++;
+  }
 
-  return strength;
-}
+  return {
+    strength,
+    criterias: Object.values(criterias),
+  };
+};

@@ -55,11 +55,13 @@ export const auth = betterAuth({
   },
   socialProviders: {
     google: {
+      prompt: "select_account",
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       redirectURI: process.env.GOOGLE_REDIRECT_URI as string, 
     },
     github: {
+      prompt: "select_account",
       clientId: process.env.GITHUB_CLIENT_ID as string,
       clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
       redirectURI: process.env.GITHUB_REDIRECT_URI as string,

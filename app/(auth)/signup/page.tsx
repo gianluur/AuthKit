@@ -25,21 +25,19 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import type { z } from "zod"
 import { SignupCredentialsSchema } from "@/schemas"
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import PasswordStrength from "@/components/password_strength";
-import { getPasswordStrength } from "@/lib/utils";
 import { FormStatus } from "@/components/form_status";
 
 import { APIError }  from "better-auth/api";
 import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { SocialWrapper } from "@/components/socials_wrapper";
-
+import { Loader2 } from "lucide-react";
 
 export default function Signup() {
   const [isPending, startTransition] = useTransition();
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [formStatus, setFormStatus] = useState({message: "", isError: false});
@@ -52,15 +50,10 @@ export default function Signup() {
       password: "",
       passwordConfirm: "",
     },
-    mode: "onChange"
   });
 
   const { formState } = form;
-
   const watchedPassword = form.watch("password");
-  useEffect(() => {
-    setPasswordStrength(getPasswordStrength(watchedPassword));
-  }, [watchedPassword])
 
   const onSubmit = (input: z.infer<typeof SignupCredentialsSchema>) => {    
     const validatedInput = SignupCredentialsSchema.safeParse(input);
@@ -73,6 +66,7 @@ export default function Signup() {
       try {
         await authClient.signUp.email({
           ...validatedInput.data,
+          callbackURL: "/profile"
         },
         {
           onSuccess: () => {
@@ -102,14 +96,14 @@ export default function Signup() {
         <CardHeader>
           <CardTitle className="text-center text-2xl">Create an account</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent >
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="w-full flex flex-col gap-4">
               <FormField disabled={isPending} control={form.control} name="name" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John" type="text" autoComplete="name" {...field}/>
+                    <Input placeholder="John" type="text" autoComplete="name" autoFocus {...field}/>
                   </FormControl>
                   <FormMessage/>
                 </FormItem>
@@ -125,9 +119,9 @@ export default function Signup() {
                 </FormItem>
               )}/>
 
-              <FormField disabled={isPending}  control={form.control} name="password" render={({ field }) => (
+              <FormField disabled={isPending} control={form.control} name="password" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel htmlFor="password">Password</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input 
@@ -137,11 +131,13 @@ export default function Signup() {
                         onFocus={() => {setIsPasswordFocused(true)}} 
                         onBlur={() => {setIsPasswordFocused(false)}}
                         onCopy={(e) => {if (!showPassword) e.preventDefault()}}
+                        id="password"
                       />
                       
                       <button 
                         type="button" 
                         onClick={() => {setShowPassword(prev => !prev)}} 
+                        onFocus={() => {setIsPasswordFocused(true)}}
                         aria-label="Toggle password visibility"
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground cursor-pointer h-9"
                       >
@@ -149,14 +145,14 @@ export default function Signup() {
                       </button>
                     </div>
                   </FormControl>
-                  {isPasswordFocused && <PasswordStrength strength={passwordStrength}/>}
+                  {isPasswordFocused && <PasswordStrength password={watchedPassword}/>}
                   <FormMessage/>
                 </FormItem>
               )}/>
 
               <FormField disabled={isPending} control={form.control} name="passwordConfirm" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
+                  <FormLabel htmlFor="confirmPassword">Confirm Password</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input placeholder="•••••••••" type={showPasswordConfirm ? "text" : "password"} {...field}/>
@@ -166,6 +162,7 @@ export default function Signup() {
                         onClick={() => {setShowPasswordConfirm(prev => !prev)}} 
                         aria-label="Toggle password confirmation visibility"
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground cursor-pointer h-9"
+                        id="confirmPassword"
                       >
                         {showPasswordConfirm ? <LuEye/> : <LuEyeOff/>}
                       </button>
@@ -177,8 +174,15 @@ export default function Signup() {
 
               <FormStatus message={formStatus.message} isError={formStatus.isError} />
               
-              <Button type="submit" className="w-full" disabled={isPending || passwordStrength <= 3 || !formState.isValid}>
-                Submit
+              <Button type="submit" className="w-full" disabled={isPending || !formState.isValid}>
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating your account...
+                  </>
+                ) : (
+                  "Sign up"
+                )}
               </Button>
             </form>
           </Form>

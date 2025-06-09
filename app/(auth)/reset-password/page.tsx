@@ -1,6 +1,5 @@
 "use client";
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -14,7 +13,6 @@ import { Input } from "@/components/ui/input"
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -24,26 +22,26 @@ import { LuEyeOff } from "react-icons/lu";
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { set, type z } from "zod"
+import type { z } from "zod"
 import { ResetPasswordSchema } from "@/schemas";
 
-import { startTransition, useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { authClient } from "@/lib/auth-client";
 import { APIError } from "better-auth/api";
 import { FormStatus } from "@/components/form_status";
-import { redirect, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
-import { getPasswordStrength } from "@/lib/utils";
 import PasswordStrength from "@/components/password_strength";
 import { Loader2 } from "lucide-react";
 
 export default function ResetPassword() {
   const [isPending, startTransition] = useTransition();
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [formStatus, setFormStatus] = useState({message: "", isError: false})
   const token = useSearchParams().get("token");
+  const router = useRouter();
   
   const form = useForm<z.infer<typeof ResetPasswordSchema>>({
     resolver: zodResolver(ResetPasswordSchema),
@@ -55,9 +53,6 @@ export default function ResetPassword() {
   const { formState } = form;
 
   const watchedPassword = form.watch("newPassword");
-  useEffect(() => {
-    setPasswordStrength(getPasswordStrength(watchedPassword));
-  }, [watchedPassword])
   
   const onSubmit = (input: z.infer<typeof ResetPasswordSchema>) => {
     const validated = ResetPasswordSchema.safeParse(input);
@@ -70,11 +65,11 @@ export default function ResetPassword() {
       try {
         await authClient.resetPassword({
           newPassword: validated.data.newPassword,
-          token: token ?? undefined
+          token: token ?? undefined,
         }, {
           onSuccess: () => {
             setFormStatus({ message: "Logged in successfully! Redirecting...", isError: false });
-            redirect("/signin");
+            router.push("/signin");
           },
           onError: (ctx) => {
             setFormStatus({message: ctx.error.message ?? "Something went wrong", isError: true});}
@@ -119,6 +114,7 @@ export default function ResetPassword() {
                       <button 
                         type="button" 
                         onClick={() => {setShowPassword(prev => !prev)}} 
+                        onFocus={() => {setIsPasswordFocused(true)}}
                         aria-label="Toggle password visibility"
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground cursor-pointer h-9"
                       >
@@ -126,17 +122,17 @@ export default function ResetPassword() {
                       </button>
                     </div>
                   </FormControl>
-                  {isPasswordFocused && <PasswordStrength strength={passwordStrength}/>}
+                  {isPasswordFocused && <PasswordStrength password={watchedPassword}/>}
                   <FormMessage/>
                   <FormStatus message={formStatus.message} isError={formStatus.isError}/>
                 </FormItem>
               )}>
               </FormField>
-              <Button type="submit" disabled={isPending || passwordStrength <= 3 || !formState.isValid}>
+              <Button type="submit" disabled={isPending || !formState.isValid}>
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending...
+                    Updating...
                   </>
                 ) : (
                   "Change Password"

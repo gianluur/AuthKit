@@ -4,10 +4,10 @@ import { FaApple, FaFacebook, FaGithub } from "react-icons/fa";
 
 export const SocialWrapper = () => {
   const socials = [
-    <SocialButton key="google" image={<FcGoogle/>} provider={"Google"} color="#000000" background="#ffffff"/>, 
-    <SocialButton key="facebook" image={<FaFacebook/>} provider={"Facebook"} color="#ffffff" background="#1778f2"/>,
-    <SocialButton key="github" image={<FaGithub/>} provider={"Github"} color="#ffffff" background="#000000"/>,
-    <SocialButton key="apple" image={<FaApple color="#000000" />} provider={"Apple"} color="#000000" background="#ffffff"/>
+    <SocialButton key="google" image={<FcGoogle/>} provider={"google"} color="#000000" background="#ffffff"/>, 
+    <SocialButton key="facebook" image={<FaFacebook/>} provider={"facebook"} color="#ffffff" background="#1778f2"/>,
+    <SocialButton key="github" image={<FaGithub/>} provider={"github"} color="#ffffff" background="#000000"/>,
+    <SocialButton key="apple" image={<FaApple color="#000000" />} provider={"apple"} color="#000000" background="#ffffff"/>
   ];
 
   return (

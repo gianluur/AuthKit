@@ -3,15 +3,13 @@ import * as z from "zod";
 
 const passwordValidation = z.string()
   .superRefine((password, ctx) => {
-    // Re-use the getPasswordStrength logic here for validation
-    const strength = getPasswordStrength(password);
+    const result = getPasswordStrength(password);
 
-    // If the calculated strength is 3 or less, add an issue
-    if (strength <= 3) {
+    if (result.strength <= 3) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Password is too weak. It must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one symbol.",
-        path: ["password"], // Adjust path in specific schema if needed (e.g., ["newPassword"])
+        message: "Password is too weak. It must contain at least one uppercase letter, one lowercase letter, one number, and one symbol.",
+        path: ["password"],
       });
     }
   });
