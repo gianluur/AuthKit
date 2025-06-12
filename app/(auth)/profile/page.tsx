@@ -37,7 +37,14 @@ export default function Profile(){
           </div>
           )}
         </CardContent>
-        <CardFooter className="flex gap-2">
+        <CardFooter className="flex gap-2 justify-center">
+          <Link href={"/two-factor"}>
+            <Button>
+              Activate 2FA
+            </Button>
+          </Link>
+
+
           <Link href={"/change-password"}>
             <Button>
               Change Password

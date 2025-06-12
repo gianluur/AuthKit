@@ -127,7 +127,8 @@ exports.Prisma.UserScalarFieldEnum = {
   name: 'name',
   email: 'email',
   emailVerified: 'emailVerified',
-  image: 'image'
+  image: 'image',
+  twoFactorEnabled: 'twoFactorEnabled'
 };
 
 exports.Prisma.SessionScalarFieldEnum = {
@@ -166,6 +167,13 @@ exports.Prisma.VerificationScalarFieldEnum = {
   expiresAt: 'expiresAt'
 };
 
+exports.Prisma.TwoFactorScalarFieldEnum = {
+  id: 'id',
+  secret: 'secret',
+  backupCodes: 'backupCodes',
+  userId: 'userId'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -186,7 +194,8 @@ exports.Prisma.ModelName = {
   User: 'User',
   Session: 'Session',
   Account: 'Account',
-  Verification: 'Verification'
+  Verification: 'Verification',
+  TwoFactor: 'TwoFactor'
 };
 
 /**

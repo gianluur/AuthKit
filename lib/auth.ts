@@ -1,11 +1,13 @@
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
+import { twoFactor } from "better-auth/plugins"
 
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@/prisma/prisma";
 import { mailer } from "./email-service";
  
 export const auth = betterAuth({
+  appName: "AuthKit",
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
@@ -68,7 +70,7 @@ export const auth = betterAuth({
     }
   },
   plugins: [
-    nextCookies(),
+    nextCookies(), twoFactor()
   ],
   secret: process.env.BETTER_AUTH_SECRET
 });
